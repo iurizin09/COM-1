@@ -1,0 +1,58 @@
+import streamlit as st
+import numpy as np
+import matplotlib.pyplot as plt
+
+st.header("Quantização baseada em PDF")
+
+# PDF uniforme entre [-sqrt(3), sqrt(3)]
+def uniform_pdf(x):
+    return np.where(
+        (-np.sqrt(3) <= x) & (x <= np.sqrt(3)),
+        0.5 * np.sqrt(3),
+        0
+    )
+
+# PDF Gaussiana N(0,1)
+def gaussian(x,mu = 0,std=1):
+    return 1/np.sqrt(2*np.pi*std**2) * np.exp(-(x-mu)**2/2*std**2)
+
+# PDF Laplaciana média 0, b=1/sqrt(2) (variância = 1)
+def laplaciana(x):
+    b = 1/np.sqrt(2)
+    return (1/(2*b)) * np.exp(-np.abs(x)/b)
+
+# 
+def gaussian_misture(x):
+    return 0.25 * gaussian(x,mu=-3,std=0.3) +  0.75 *gaussian(x,mu=2,std=0.8)
+
+# Dicionário correto
+pdf_options = {
+    "Uniforme": uniform_pdf,
+    "Gaussiana": gaussian,
+    "Laplaciana": laplaciana,
+    "Mistura" : gaussian_misture
+}
+
+# Radio correto
+pdf_name = st.radio(
+    label="Selecione a PDF fₓ(x)",
+    options=list(pdf_options.keys()),
+    horizontal=True
+)
+
+# Seleciona função escolhida
+pdf_func = pdf_options[pdf_name]
+
+tabs = st.tabs(["Quantização", "Quantização não uniforme"])
+
+with tabs[0]:
+    xs = np.linspace(-5, 5, num=100_000)
+
+    fig, ax = plt.subplots(figsize=(6, 4))
+    ax.plot(xs, pdf_func(xs))
+    ax.set_title(f"PDF {pdf_name}")
+    ax.set_xlabel("x")
+    ax.set_ylabel("f(x)")
+    ax.grid(True)
+
+    st.pyplot(fig)
